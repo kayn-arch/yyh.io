@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D旋转相册</title>
+    <style>
+        * { margin: 0; padding: 0; }
+        html, body { height: 100%; width: 100%; }
+        body {
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('cute-background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+        #introVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1000;
+        }
+        #header {
+            margin: 20px 0;
+            text-align: center;
+            font-family: 'Brush Script MT', cursive;
+            color: #fff;
+            font-size: 3em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+            opacity: 0;
+            animation: fadeIn 3s forwards, blink 1s step-start infinite;
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes blink {
+            50% { opacity: 0.8; }
+        }
+        #hearts {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+            display: none;
+        }
+        .heart {
+            position: absolute;
+            width: 40px; /* 增大爱心泡泡尺寸 */
+            height: 40px;
+            background: url('heart.png') no-repeat center center / contain;
+            opacity: 0.6;
+            animation: fall 8s infinite ease-in-out;
+        }
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) scale(1);
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) scale(1.2);
+                opacity: 0;
+            }
+        }
+        #box {
+            position: relative;
+            display: flex;
+            width: 200px; /* 增大相册尺寸 */
+            height: 300px;
+            margin: auto;
+            transform-style: preserve-3d;
+            transform: rotateX(-10deg);
+            transition: transform 1s ease;
+            display: none;
+        }
+        #box > div {
+            transform-style: preserve-3d;
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            line-height: 300px; /* 增大相册尺寸 */
+            font-size: 75px; /* 增大相册尺寸 */
+            text-align: center;
+            box-shadow: 0 0 10px #fff;
+            -webkit-box-reflect: below 10px -webkit-linear-gradient(top, rgba(0,0,0,0) 40%, rgba(0,0,0,.8) 100%);
+            transition: transform 1s ease, box-shadow 0.3s ease;
+        }
+        #box > div:hover {
+            transform: scale(1.1) translate3d(0,0,350px);
+            box-shadow: 0 0 20px #fff;
+        }
+        #box p {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            margin: auto;
+            width: 1200px;
+            height: 1200px;
+            background: -webkit-radial-gradient(center center, 600px 600px, rgba(50,50,50,1), rgba(0,0,0,0));
+            border-radius: 50%;
+            transform: rotateX(90deg) translate3d(-600px,0,-105px);
+        }
+        /* Modal Styles */
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #modal img {
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 0 20px #fff;
+        }
+        #modal .close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 40px;
+            color: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<video id="introVideo" autoplay>
+    <source src="intro-video.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
+<div id="header"></div>
+
+<div id="hearts"></div>
+
+<div id="box">
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <div></div>
+    <p></p>
+</div>
+
+<div id="modal">
+    <span class="close">&times;</span>
+    <img src="" alt="Large Image">
+</div>
+
+<audio autoplay loop>
+    <source src="background-music.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<script>
+    // 等待视频结束或点击视频后进入相册
+    document.getElementById('introVideo').addEventListener('click', function() {
+        enterAlbum();
+    });
+
+    document.getElementById('introVideo').addEventListener('ended', function() {
+        enterAlbum();
+    });
+
+    function enterAlbum() {
+        document.getElementById('introVideo').style.display = 'none';
+        document.getElementById('header').style.display = 'block';
+        document.getElementById('box').style.display = 'flex';
+        document.getElementById('hearts').style.display = 'block';
+        init();
+    }
+
+    function init() {
+        var obox = document.getElementById('box'),
+            aDiv = obox.getElementsByTagName('div');
+        
+        for (var i = 0; i < aDiv.length; i++) {
+            aDiv[i].style.background = "url(images/" + (i + 1) + ".jpg) center/cover";
+            aDiv[i].style.transform = "rotateY(" + (i * 36) + "deg) translate3d(0,0,350px)";
+            aDiv[i].style.transition = "transform 1s " + (aDiv.length - i) * 0.2 + "s";
+
+            // 添加点击事件
+            aDiv[i].onclick = function() {
+                var modal = document.getElementById('modal');
+                var modalImg = modal.querySelector('img');
+                modalImg.src = this.style.backgroundImage.slice(5, -2);
+                modal.style.display = 'flex';
+            };
+        }
+
+        createHearts(); // 添加爱心泡泡效果
+
+        var sX, sY, nX, nY, desX = 0, desY = 0, tX = 0, tY = 10, index = 0;
+        document.onmousedown = function(e) {
+            clearInterval(obox.timer);
+            e = e || window.event;
+            sX = e.clientX;
+            sY = e.clientY;
+
+            this.onmousemove = function(e) {
+                e = e || window.event;
+                nX = e.clientX;
+                nY = e.clientY;
+                desX = nX - sX;
+                desY = nY - sY;
+                tX += desX * 0.1;
+                tY += desY * 0.1;
+
+                obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+                sX = nX;
+                sY = nY;
+            };
+
+            this.onmouseup = function() {
+                this.onmousemove = this.onmouseup = null;
+                obox.timer = setInterval(function() {
+                    desX *= 0.95;
+                    desY *= 0.95;
+                    tX += desX * 0.1;
+                    tY += desY * 0.1;
+                    obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+                    if (Math.abs(desX) < 0.5 && Math.abs(desY) < 0.5) {
+                        clearInterval(obox.timer);
+                    }
+                }, 13);
+            };
+        };
+
+        mousewheel(document, function(e) {
+            e = e || window.event;
+            e.wheelDelta ? e.wheelDelta > 0 ? index-- : index++ : e.detail < 0 ? index-- : index++;
+            index = Math.max(0, Math.min(10, index));
+            document.body.style.perspective = 1000 + index * 500 + "px";
+        });
+
+        function mousewheel(obj, fn) {
+            document.onmousewheel === null ? obj.onmousewheel = fn : addEvent(obj, "DOMMouseScroll", fn);
+        }
+
+        function addEvent(obj, eName, fn) {
+            obj.attachEvent ? obj.attachEvent("on" + eName, fn) : obj.addEventListener(eName, fn);
+        }
+
+        var autoRotate = setInterval(function() {
+            tX += 1;
+            obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+        }, 100);
+    }
+
+    function createHearts() {
+        var heartsContainer = document.getElementById('hearts');
+        for (var i = 0; i < 30; i++) { // 增加爱心泡泡数量
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = `${Math.random() * 100}%`;
+            heart.style.animationDelay = `${Math.random() * 5}s`;
+            heartsContainer.appendChild(heart);
+        }
+    }
+
+    // Modal功能
+    var modal = document.getElementById('modal');
+    var close = modal.querySelector('.close');
+
+    close.onclick = function() {
+        modal.style.display = 'none';
+    };
+
+    window.onclick = function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    // 触摸支持
+    document.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        sX = e.touches[0].clientX;
+        sY = e.touches[0].clientY;
+        document.ontouchmove = function(e) {
+            nX = e.touches[0].clientX;
+            nY = e.touches[0].clientY;
+            desX = nX - sX;
+            desY = nY - sY;
+            tX += desX * 0.1;
+            tY += desY * 0.1;
+
+            obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+            sX = nX;
+            sY = nY;
+        };
+        document.ontouchend = function() {
+            document.ontouchmove = document.ontouchend = null;
+            obox.timer = setInterval(function() {
+                desX *= 0.95;
+                desY *= 0.95;
+                tX += desX * 0.1;
+                tY += desY * 0.1;
+                obox.style.transform = "rotateX(" + (-tY) + "deg) rotateY(" + tX + "deg)";
+                if (Math.abs(desX) < 0.5 && Math.abs(desY) < 0.5) {
+                    clearInterval(obox.timer);
+                }
+            }, 13);
+        };
+    });
+</script>
+
+</body>
+</html>
